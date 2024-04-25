@@ -1,101 +1,75 @@
-// Your code here
-// Base URL for the API
-const BASE_URL = 'http://localhost:3000';
+document.addEventListener('DOMContentLoaded', function () {
+  const baseUrl = 'http://localhost:3000';
+  const apiUrl = `${baseUrl}/characters`;
 
-// Endpoint for retrieving character data
-const CHARACTER_ENDPOINT = '/characters';
+  // Function to fetch character data and display character names
+  function fetchCharactersAndDisplayNames() {
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Check Your Internet Connection');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const characterBar = document.getElementById('character-bar');
+        characterBar.innerHTML = ''; // Clear existing content
 
-// Function to fetch character data and display character names
-function fetchAndDisplayCharacters() {
-    // Fetch character data from the server
-    fetch(BASE_URL + CHARACTER_ENDPOINT)
-        .then(response => response.json())
-        .then(characters => {
-            // Get the character-bar div element
-            const characterBar = document.getElementById('character-bar');
+        data.forEach(character => {
+          const characterNameSpan = document.createElement('span');
+          characterNameSpan.textContent = character.name;
+          characterNameSpan.classList.add('character-name'); // Add a class for styling and event handling
+          characterBar.appendChild(characterNameSpan);
+        });
 
-            // Clear any existing content in character-bar
-            characterBar.innerHTML = '';
+        // Add event listener to character names
+        const characterNames = document.querySelectorAll('.character-name');
+        characterNames.forEach(name => {
+          name.addEventListener('click', function () {
+            const characterName = this.textContent;
+            displayCharacterDetails(characterName, data);
+          });
+        });
+      })
+      .catch(error => {
+        console.error('There was a problem fetching characters:', error);
+      });
+  }
 
-            // Iterate over each character data
-            characters.forEach(character => {
-                // Create a span element for each character
-                const characterSpan = document.createElement('span');
-                characterSpan.textContent = character.name;
+  // Function to display character details in the div#detailed-info
+  function displayCharacterDetails(characterName, characterData) {
+    const character = characterData.find(char => char.name === characterName);
 
-                // Add the span element to the character-bar div
-                characterBar.appendChild(characterSpan);
-            });
-        })
-        .catch(error => console.error('Error fetching characters:', error));
-}
-// // Function to display character details
-// function displayCharacterDetails(character) {
-//     // Get the detailed-info div element
-//     const detailedInfoDiv = document.getElementById('detailed-info');
+    if (character) {
+      const nameElement = document.getElementById('name');
+      const imageElement = document.getElementById('image');
+      const voteCountElement = document.getElementById('vote-count');
 
-//     // Clear any existing content in detailed-info
-//     detailedInfoDiv.innerHTML = '';
+      nameElement.textContent = character.name;
+      imageElement.src = character.image;
+      imageElement.alt = character.name;
+      voteCountElement.textContent = character.votes;
 
-//     // Create and display character details
-//     const characterNameHeading = document.createElement('h2');
-//     characterNameHeading.textContent = character.name;
+      // Add event listener to the votes form
+      const votesForm = document.getElementById('votes-form');
+      votesForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const votesInput = document.getElementById('votes');
+        const votes = parseInt(votesInput.value);
+        if (!isNaN(votes)) {
+          character.votes += votes;
+          voteCountElement.textContent = character.votes;
+        } else {
+          console.error('Please enter a valid number of votes.');
+        }
+        // Reset the votes input
+        votesInput.value = '';
+      });
+    } else {
+      console.error(`Character '${characterName}' not found in the character data.`);
+    }
+  }
 
-//     const characterDescriptionParagraph = document.createElement('p');
-//     characterDescriptionParagraph.textContent = character.description;
-
-//     detailedInfoDiv.appendChild(characterNameHeading);
-//     detailedInfoDiv.appendChild(characterDescriptionParagraph);
-// }
-
-// // Call the function to fetch and display characters when the page loads
-// window.addEventListener('load', fetchAndDisplayCharacters);
-
-
-// // Function to handle form submission
-// function handleFormSubmission(event) {
-//     event.preventDefault();
-
-//     // Get the input field for number of votes
-//     const votesInput = document.getElementById('votes-form');
-
-//     // Get the value of number of votes from the input field
-//     const votes = parseInt(votesInput.value);
-
-//     // Reset the input field
-//     votesInput.value = '';
-
-//     // Get the element displaying character's votes
-//     const votesDisplay = document.getElementById('character-votes');
-
-//     // Update the number of votes
-//     const currentVotes = parseInt(votesDisplay.textContent);
-//     const totalVotes = currentVotes + votes;
-//     votesDisplay.textContent = totalVotes;
-// }
-
-// // Add event listener to the form for form submission
-// const votesForm = document.getElementById('votes-form');
-// votesForm.addEventListener('submit', handleFormSubmission);
-document.addEventListener('DOMContentLoaded', function() {
-    // Get the form and character info elements
-    const votesForm = document.getElementById('votes-form');
-    const detailedInfo = document.getElementById('detailed-info');
-  
-    // Add event listener to the form submit event
-    votesForm.addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent default form submission behavior
-  
-      // Get the number of votes from the input field
-      const votesInput = document.getElementById('votes-input');
-      const votes = parseInt(votesInput.value); // Convert the input value to an integer
-  
-      // Update the total number of votes for the character
-      const currentVotes = parseInt(detailedInfo.textContent);
-      detailedInfo.textContent = currentVotes + votes;
-  
-      // Reset the input field value
-      votesInput.value = '';
-    });
-  });
-  
+  // Fetch characters and display their names when the page loads
+  fetchCharactersAndDisplayNames();
+});
